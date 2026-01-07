@@ -10,7 +10,6 @@ module MUX4x1 (
             2'b01: OUT = 1'b1;
             2'b10: OUT = Ser_Data;
             2'b11: OUT = Par_Bit;
-            default: OUT = 1'b1; // Default case (should not occur)
         endcase
     end
 endmodule

@@ -12,7 +12,7 @@ module UART_TX(
     wire [1:0] mux_sel;
     wire       ser_en, ser_done, capture, s_data, parity;
 
-    FSM U0 (
+    FSM FSM_U0 (
         .clk(clk),
         .rst_n(rst_n),
         .Data_Valid(Data_Valid),
@@ -24,7 +24,7 @@ module UART_TX(
         .Capture(capture)
     );
 
-    Serializer U1 (
+    Serializer Serializer_U1 (
         .clk(clk),
         .rst_n(rst_n),
         .P_DATA(P_DATA),
@@ -33,7 +33,7 @@ module UART_TX(
         .Ser_Done(ser_done)
     );
 
-    Parity_Calc U2 (
+    Parity_Calc Parity_Calc_U2 (
         .clk(clk),
         .rst_n(rst_n),
         .P_DATA(P_DATA),
@@ -42,7 +42,7 @@ module UART_TX(
         .parity_out(parity)
     );
 
-    MUX4x1 U3 (
+    MUX4x1 MUX4x1_U3 (
         .Ser_Data(s_data),
         .Par_Bit(parity),
         .SEL(mux_sel),

@@ -85,7 +85,7 @@ module FSM(
                 MUX_SEL = 2'b01; // Stop bit (1)
             end     
             default: begin
-                MUX_SEL = 2'b01; // Default to stop bit (0)
+                MUX_SEL = 2'b01; // Default to Stop bit (1)
                 Busy = 1'b0; // Not busy in IDLE
             end
         endcase

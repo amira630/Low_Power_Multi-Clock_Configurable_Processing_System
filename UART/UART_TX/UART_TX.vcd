@@ -1,5 +1,5 @@
 $date
-	Wed Oct 15 17:42:25 2025
+	Thu Jan  8 00:40:09 2026
 $end
 $version
 	QuestaSim Version 2021.1
@@ -60,7 +60,7 @@ $var wire 1 C capture $end
 $var wire 1 D s_data $end
 $var wire 1 E parity $end
 
-$scope module U0 $end
+$scope module FSM_U0 $end
 $var parameter 3 F IDLE $end
 $var parameter 3 G START_BIT $end
 $var parameter 3 H DATA_BITS $end
@@ -79,7 +79,7 @@ $var reg 3 O current_state [2:0] $end
 $var reg 3 P next_state [2:0] $end
 $upscope $end
 
-$scope module U1 $end
+$scope module Serializer_U1 $end
 $var wire 1 2 clk $end
 $var wire 1 3 rst_n $end
 $var wire 1 4 P_DATA [7] $end
@@ -97,7 +97,7 @@ $var reg 8 S data_reg [7:0] $end
 $var reg 3 T bit_count [2:0] $end
 $upscope $end
 
-$scope module U2 $end
+$scope module Parity_Calc_U2 $end
 $var wire 1 2 clk $end
 $var wire 1 3 rst_n $end
 $var wire 1 4 P_DATA [7] $end
@@ -114,7 +114,7 @@ $var reg 1 U parity_out $end
 $var reg 8 V data_reg [7:0] $end
 $upscope $end
 
-$scope module U3 $end
+$scope module MUX4x1_U3 $end
 $var wire 1 D Ser_Data $end
 $var wire 1 E Par_Bit $end
 $var wire 1 ? SEL [1] $end
