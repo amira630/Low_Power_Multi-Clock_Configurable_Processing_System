@@ -7,8 +7,8 @@ module UART_RX(
     input wire        Par_Typ, // 0: Even, 1: Odd
     output wire [7:0] P_DATA,
     output wire       Data_Valid,
-    output wire       Par_Error,
-    output wire       Stop_Error
+    output wire       PAR_Err,
+    output wire       STP_Err
 );
 
 endmodule
