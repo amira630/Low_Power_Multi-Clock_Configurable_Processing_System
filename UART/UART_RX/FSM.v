@@ -26,6 +26,7 @@ module FSM(
                      STOP_BIT  = 3'b110; // 6
 
     reg [2:0] current_state, next_state;
+    reg [3:0] bit_count;
 
     // State Transition
     always @(posedge clk or negedge rst_n) begin
@@ -38,6 +39,7 @@ module FSM(
     // Next State Logic
     always @(*) begin
         // Default Outputs
+        bit_count   = 1'b0;
         strt_chk_en = 1'b0;
         par_chk_en  = 1'b0;
         stp_chk_en  = 1'b0;
@@ -48,12 +50,13 @@ module FSM(
         
         case (current_state)
             IDLE: begin
-                dat_samp_en = 1'b0;
-                enable      = 1'b0;
                 if (!RX_IN) 
                     next_state = START_BIT;
-                else 
+                else begin
+                    dat_samp_en = 1'b0;
+                    enable      = 1'b0;
                     next_state = IDLE;
+                end
             end
             START_BIT: begin
                 if (edge_cnt == (Prescale>>1)) begin
@@ -65,7 +68,10 @@ module FSM(
                     next_state = START_BIT;
             end
             DATA_BITS: begin
-                deser_en    = 1'b1;
+                if (bit_count != bit_cnt) begin
+                    deser_en    = 1'b1;
+                    bit_count   = bit_cnt;
+                end
                 if (bit_cnt == 4'd9) begin
                     if (Par_En)
                         next_state = PARITY_BIT;
@@ -94,7 +100,10 @@ module FSM(
             end
             default: next_state = IDLE;
         endcase
-        if (strt_glitch | stp_err | par_err) 
+        if (strt_glitch | stp_err | par_err) begin
             next_state  = IDLE;
+            dat_samp_en = 1'b0;
+            enable      = 1'b0;
+        end
     end
 endmodule
