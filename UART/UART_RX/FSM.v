@@ -94,7 +94,7 @@ module FSM(
             STOP_BIT: begin
                 if (edge_cnt == ((Prescale>>1)+1)) begin
                     stp_chk_en = 1'b1;
-                end else if ((bit_cnt == 4'd11 && Par_En) || (bit_cnt == 4'd10 && !Par_En)) begin
+                end else if (edge_cnt > ((Prescale>>1)+1)) begin
                     next_state = IDLE;
                     Data_Valid  = 1'b1;
                 end else

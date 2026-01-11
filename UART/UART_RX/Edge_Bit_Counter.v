@@ -18,8 +18,8 @@ module Edge_Bit_Counter(
         end else if (enable) begin
             if (edge_cnt == (Prescale - 1'b1)) begin
                 edge_cnt <= 5'd0;
-                if (bit_cnt == 4'd11)
-                    bit_cnt <= 4'd1;
+                if (bit_cnt == 4'd10)
+                    bit_cnt <= 4'd0;
                 else
                     bit_cnt <= bit_cnt + 4'd1;
             end
