@@ -39,7 +39,6 @@ module FSM(
     // Next State Logic
     always @(*) begin
         // Default Outputs
-        bit_count   = 1'b0;
         strt_chk_en = 1'b0;
         par_chk_en  = 1'b0;
         stp_chk_en  = 1'b0;
@@ -57,15 +56,17 @@ module FSM(
                     enable      = 1'b0;
                     next_state = IDLE;
                 end
+                bit_count   = 1'b0;
             end
             START_BIT: begin
-                if (edge_cnt == (Prescale>>1)) begin
+                if (edge_cnt == ((Prescale>>1)+1)) begin
                     strt_chk_en = 1'b1;
                 end else if (bit_cnt == 4'd1) begin
                     next_state = DATA_BITS;
                 end
                 else
                     next_state = START_BIT;
+                bit_count   = 1'b0;
             end
             DATA_BITS: begin
                 if (bit_count != bit_cnt) begin
@@ -82,23 +83,25 @@ module FSM(
                     next_state = DATA_BITS;
             end
             PARITY_BIT:begin
-                if (edge_cnt == (Prescale>>1)) begin
+                if (edge_cnt == ((Prescale>>1)+1)) begin
                     par_chk_en = 1'b1;
                 end else if (bit_cnt == 4'd10) 
                     next_state = STOP_BIT;
                 else
                     next_state = PARITY_BIT;
+                bit_count   = 1'b0;
             end
             STOP_BIT: begin
-                if (edge_cnt == (Prescale>>1)) begin
+                if (edge_cnt == ((Prescale>>1)+1)) begin
                     stp_chk_en = 1'b1;
                 end else if ((bit_cnt == 4'd11 && Par_En) || (bit_cnt == 4'd10 && !Par_En)) begin
                     next_state = IDLE;
                     Data_Valid  = 1'b1;
                 end else
                     next_state = STOP_BIT;
+                bit_count   = 1'b0;
             end
-            default: next_state = IDLE;
+            default: begin next_state = IDLE; bit_count   = 1'b0; end
         endcase
         if (strt_glitch | stp_err | par_err) begin
             next_state  = IDLE;
