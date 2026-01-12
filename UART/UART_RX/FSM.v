@@ -107,6 +107,7 @@ module FSM(
             next_state  = IDLE;
             dat_samp_en = 1'b0;
             enable      = 1'b0;
+            Data_Valid  = 1'b0;
         end
     end
 endmodule

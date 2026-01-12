@@ -67,48 +67,44 @@ module UART_RX_tb();
 
         $display("Start of Odd Parity Testing at %0t", $time);
         
-        repeat(50) begin
+        repeat(25) begin
             @(negedge clk_tb);
             input_stimulus(1'b1, 1'b1, 3'b0); // Parity enabled, Odd Parity, no errors
-            @(negedge clk_tb);
             if (Data_Valid_tb) 
                 $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
             // @(negedge clk_tb);
             // check_out(); 
         end
 
-        // $display("Start of Even Parity Testing at %0t", $time);
+        $display("Start of Even Parity Testing at %0t", $time);
                 
-        // repeat(50) begin
-        //     @(negedge clk_tb);
-        //     input_stimulus(1'b1, 1'b0, 1'b0); // Parity enabled, Even Parity, continue = 0
-        //     @(negedge clk_tb);
-        //     if (Data_Valid_tb) 
-        //         $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-        //     // check_out(); 
-        // end
+        repeat(25) begin
+            // @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b0, 3'b0); // Parity enabled, Even Parity, no errors
+            if (Data_Valid_tb) 
+                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
+            // check_out(); 
+        end
 
-        // $display("Start of no Parity Testing at %0t", $time);
+        $display("Start of no Parity Testing at %0t", $time);
         
-        // repeat(25) begin
-        //     @(negedge clk_tb);
-        //     Par_En_tb = 1'b0; // Parity Disabled
-        //     Par_Typ_tb = 1'b1; // Odd Parity
-        //     // @(negedge clk_tb);
-        //     if (Data_Valid_tb) 
-        //         $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-        //     // check_out(); 
-        // end
+        repeat(25) begin
+            // @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b1, 3'b0); // Parity Disabled, Odd Parity, no errors
+            // @(negedge clk_tb);
+            if (Data_Valid_tb) 
+                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
+            // check_out(); 
+        end
 
-        // repeat(25) begin
-            
-        //     Par_En_tb = 1'b0; // Parity Disabled
-        //     Par_Typ_tb = 1'b0; // Even Parity
-        //     // @(negedge clk_tb);
-        //     if (Data_Valid_tb) 
-        //         $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-        //     // check_out(); 
-        // end
+        repeat(25) begin
+            // @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b0, 3'b0); // Parity Disabled, Even Parity, no errors
+            // @(negedge clk_tb);
+            if (Data_Valid_tb) 
+                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
+            // check_out(); 
+        end
         #(20*CLOCK_PERIOD)
         $display("Simulation Ended with %0d correct and %0d errors", correct, error);
         $stop;
