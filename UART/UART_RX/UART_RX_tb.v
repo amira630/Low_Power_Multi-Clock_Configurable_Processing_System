@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns/1fs
 module UART_RX_tb();
 
     /////////////////////////////////////////////////////////
@@ -26,6 +26,7 @@ module UART_RX_tb();
     wire       Data_Valid_tb, PAR_Err_tb, STP_Err_tb;
 
     reg [7:0] data_temp;
+    reg [2:0] STAGE; // 0: Idle, 1: Start Bit, 2: Data Bits, 3: Parity Bit, 4: Stop Bit
 
     ////////////////////////////////////////////////////////
     /////////////////// DUT Instantation ///////////////////
@@ -67,7 +68,7 @@ module UART_RX_tb();
 
         $display("Start of Odd Parity Testing at %0t", $time);
         
-        repeat(25) begin
+        repeat(100) begin
             @(negedge clk_tb);
             input_stimulus(1'b1, 1'b1, 3'b0); // Parity enabled, Odd Parity, no errors
             if (Data_Valid_tb) 
@@ -121,6 +122,7 @@ module UART_RX_tb();
             count = 0;
             correct = 0;
             error = 0;
+            STAGE = 3'b0;
             clk_TX  	= 1'b0;
             clk_tb  	= 1'b0;
             RX_IN_tb    = 1'b1; // Idle State
@@ -153,6 +155,7 @@ module UART_RX_tb();
             @(negedge clk_TX);
             Par_En_tb = par_en;
             Par_Typ_tb = par_typ;
+            STAGE = 3'b1; // Start Bit Stage
             if (errors_to_introduce[0]) begin
                 #(CLOCK_PERIOD*((PRESCALE/2)-1));
                 RX_IN_tb = 1'b0; // Start Bit
@@ -167,6 +170,7 @@ module UART_RX_tb();
                 @(negedge clk_TX);
                 RX_IN_tb = $random;
                 data_temp = {RX_IN_tb, data_temp[7:1]};
+                STAGE = 3'd2; // Data Bits Stage
             end
             // Parity Bit
             if (par_en) begin
@@ -177,6 +181,7 @@ module UART_RX_tb();
                 else begin
                     RX_IN_tb = par_typ ? ~(^data_temp) : ^data_temp; // Odd or Even Parity
                 end
+                STAGE = 3'd3; // Parity Bit Stage
             end
             // Stop Bit
             @(negedge clk_TX);
@@ -186,6 +191,8 @@ module UART_RX_tb();
             else begin
                 RX_IN_tb = 1'b1; // Stop Bit
             end
+            STAGE = 3'd4; // Stop Bit Stage
+            // Return to Idle
         end
     endtask
 

@@ -49,7 +49,7 @@ module FSM(
         
         case (current_state)
             IDLE: begin
-                if (!RX_IN) 
+                if (!RX_IN && (edge_cnt == 'b0)) 
                     next_state = START_BIT;
                 else begin
                     dat_samp_en = 1'b0;
@@ -96,12 +96,12 @@ module FSM(
                     stp_chk_en = 1'b1;
                 end else if (edge_cnt > ((Prescale>>1)+1)) begin
                     next_state = IDLE;
-                    Data_Valid  = 1'b1;
+                    Data_Valid = 1'b1;
                 end else
                     next_state = STOP_BIT;
                 bit_count   = 1'b0;
             end
-            default: begin next_state = IDLE; bit_count   = 1'b0; end
+            default: begin next_state = IDLE; bit_count = 1'b0; end
         endcase
         if (strt_glitch | stp_err | par_err) begin
             next_state  = IDLE;
