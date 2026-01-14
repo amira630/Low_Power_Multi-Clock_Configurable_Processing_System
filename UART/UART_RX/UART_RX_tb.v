@@ -9,7 +9,6 @@ module UART_RX_tb();
     parameter CLOCK_FREQ_TX = 115.2; // Clock frequency in KHz
     parameter CLOCK_PERIOD_TX = 1000/CLOCK_FREQ_TX; // Transmission Clock period in ns
     parameter CLOCK_PERIOD = 1000/(CLOCK_FREQ_TX * PRESCALE); // Receiver Clock period in ns
-    reg [3:0] count;
     integer correct, error;
 
     /////////////////////////////////////////////////////////
@@ -26,6 +25,7 @@ module UART_RX_tb();
     wire       Data_Valid_tb, PAR_Err_tb, STP_Err_tb;
 
     reg [7:0] data_temp;
+    reg [2:0] error_type;
     reg [2:0] STAGE; // 0: Idle, 1: Start Bit, 2: Data Bits, 3: Parity Bit, 4: Stop Bit
 
     ////////////////////////////////////////////////////////
@@ -71,41 +71,119 @@ module UART_RX_tb();
         repeat(100) begin
             @(negedge clk_tb);
             input_stimulus(1'b1, 1'b1, 3'b0); // Parity enabled, Odd Parity, no errors
-            if (Data_Valid_tb) 
-                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-            // @(negedge clk_tb);
-            // check_out(); 
+            check_out(0);
         end
 
         $display("Start of Even Parity Testing at %0t", $time);
-                
-        repeat(25) begin
-            // @(negedge clk_tb);
+
+        repeat(100) begin
+            @(negedge clk_tb);
             input_stimulus(1'b1, 1'b0, 3'b0); // Parity enabled, Even Parity, no errors
-            if (Data_Valid_tb) 
-                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-            // check_out(); 
+            check_out(0); 
         end
 
         $display("Start of no Parity Testing at %0t", $time);
         
-        repeat(25) begin
-            // @(negedge clk_tb);
+        repeat(100) begin
+            @(negedge clk_tb);
             input_stimulus(1'b0, 1'b1, 3'b0); // Parity Disabled, Odd Parity, no errors
-            // @(negedge clk_tb);
-            if (Data_Valid_tb) 
-                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-            // check_out(); 
+            check_out(0); 
+        end
+
+        repeat(100) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b0, 3'b0); // Parity Disabled, Even Parity, no errors
+            check_out(0); 
+        end
+
+        $display("Start of No Transmission Testing at %0t", $time);
+
+        repeat(100 * PRESCALE) begin
+            #(CLOCK_PERIOD);
+            if (Data_Valid_tb || PAR_Err_tb || STP_Err_tb) begin
+                $display("ERROR: Data Valid asserted incorrectly at time %0t during IDLE state", $time);
+                error = error + 1;
+            end
+            else begin
+                $display("Correctly remained idle at time %0t", $time);
+                correct = correct + 1;
+            end
+        end
+        $display("Start of Odd Parity Testing with issues at %0t", $time);
+        
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b1, 3'b10); // Parity enabled, Odd Parity, Stop error
+            check_out(1); 
         end
 
         repeat(25) begin
-            // @(negedge clk_tb);
-            input_stimulus(1'b0, 1'b0, 3'b0); // Parity Disabled, Even Parity, no errors
-            // @(negedge clk_tb);
-            if (Data_Valid_tb) 
-                $display("Data Valid at time %0t with P_DATA = %b", $time, P_DATA_tb);
-            // check_out(); 
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b1, 3'b1); // Parity enabled, Odd Parity, Start error
+            check_out(1); 
         end
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b1, 3'b100); // Parity enabled, Odd Parity, Parity error
+            check_out(1); 
+        end
+
+        $display("Start of Even Parity Testing with issues at %0t", $time);
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b0, 3'b1); // Parity enabled, Even Parity, Start error
+            check_out(1); 
+        end
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b0, 3'b10); // Parity enabled, Even Parity, Stop error
+            check_out(1); 
+        end
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b0, 3'b100); // Parity enabled, Even Parity, Parity error
+            check_out(1); 
+        end
+
+        $display("Start of no Parity Testing with issues at %0t", $time);
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b1, 3'b1); // Parity Disabled, Odd Parity, Start error
+            check_out(1); 
+        end
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b1, 3'b10); // Parity Disabled, Odd Parity, Stop error
+            check_out(1); 
+        end
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b0, 3'b1); // Parity Disabled, Even Parity, Start error
+            check_out(1); 
+        end
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b0, 1'b0, 3'b10); // Parity Disabled, Even Parity, Stop error
+            check_out(1); 
+        end
+
+        $display("Start of Randomized Testing with random issues at %0t", $time);
+
+        repeat(100) begin
+            @(negedge clk_tb);
+            error_type = $random;
+            input_stimulus($random, $random, error_type); // Random Parity and Random Errors
+            check_out(|error_type); 
+        end
+
         #(20*CLOCK_PERIOD)
         $display("Simulation Ended with %0d correct and %0d errors", correct, error);
         $stop;
@@ -119,7 +197,6 @@ module UART_RX_tb();
 
     task initialize;
         begin
-            count = 0;
             correct = 0;
             error = 0;
             STAGE = 3'b0;
@@ -130,6 +207,7 @@ module UART_RX_tb();
             Par_En_tb   = 1'b0; // Parity Disabled
             Par_Typ_tb  = 1'b0; // Even Parity
             data_temp = 8'b0;
+            error_type = 3'b0;
             reset();
         end	
     endtask
@@ -157,9 +235,8 @@ module UART_RX_tb();
             Par_Typ_tb = par_typ;
             STAGE = 3'b1; // Start Bit Stage
             if (errors_to_introduce[0]) begin
-                #(CLOCK_PERIOD*((PRESCALE/2)-1));
                 RX_IN_tb = 1'b0; // Start Bit
-                #(CLOCK_PERIOD*(PRESCALE/2)+1);
+                #(CLOCK_PERIOD*(PRESCALE/2)-1);
                 RX_IN_tb = 1'b1; // Start Bit Glitch
             end
             else begin
@@ -168,7 +245,10 @@ module UART_RX_tb();
             // Data Bits
             repeat (8) begin
                 @(negedge clk_TX);
-                RX_IN_tb = $random;
+                if (errors_to_introduce[0])
+                    RX_IN_tb = 1'b1;
+                else
+                    RX_IN_tb = $random;
                 data_temp = {RX_IN_tb, data_temp[7:1]};
                 STAGE = 3'd2; // Data Bits Stage
             end
@@ -198,64 +278,35 @@ module UART_RX_tb();
 
     ////////////////// Check Out Response  ////////////////////
 
-    // task check_out;
-    //     begin
-    //         if(!rst_n_tb) begin
-    //             // During Reset
-    //             TX_OUT_expec = 1'b1; // Assuming TX_OUT is high during reset
-    //             Busy_expec = 1'b0; // Not busy during reset
-    //             Busy_expec_temp = 1'b0;
-    //             P_DATA_reg = 8'b0; // Clear stored data
-    //             count = 0; // Reset count for next transmission
-    //             done = 1'b0; // Reset done for next transmission
-    //         end
-    //         else if (Data_Valid_tb && !Busy_expec) begin
-    //             // When Data is Valid, TX_OUT should start transmitting
-    //             P_DATA_reg = P_DATA_tb; // Store the data for calculation
-    //             Busy_expec_temp = 1'b1; // Indicate start of transmission
-    //         end
-    //         else if (Busy_expec_temp) begin
-    //             TX_OUT_expec = 1'b0; // Start bit
-    //             if (count == 9) begin// After sending all data bits
-    //                 if (Par_En_tb && !done) begin
-    //                     if (Par_Typ_tb) // Odd Parity
-    //                         TX_OUT_expec = ~^P_DATA_reg; // Calculate odd parity
-    //                     else          // Even Parity
-    //                         TX_OUT_expec = ^P_DATA_reg; // Calculate even parity
-    //                     done = 1'b1; // Indicate transmission done
-    //                 end else if (!Par_En_tb || done)  begin
-    //                     TX_OUT_expec = 1'b1; // Stop bit
-    //                     Busy_expec_temp = 1'b0;
-    //                     done = 1'b0; // Reset done for next transmission
-    //                     count = 0; // Reset count for next transmission
-    //                     if (Data_Valid_tb) begin
-    //                         P_DATA_reg = P_DATA_tb; // Store the data for calculation
-    //                         Busy_expec_temp = 1'b1;
-    //                     end
-    //                 end
-    //             end else if (count != 0) begin
-    //                 TX_OUT_expec = P_DATA_reg[count-1]; // Serial state
-    //                 count = count + 1; // Increment count for next bit
-    //             end
-    //             else begin
-    //                 count = count + 1; // Increment count for next bit
-    //             end
-    //         end else begin
-    //             // Idle State
-    //             TX_OUT_expec = 1'b1; // Idle state
-    //             Busy_expec_temp = 1'b0; // Not busy
-    //             count = 0; // Reset count for next transmission
-    //         end
-    //         // Check if the outputs match the expected values
-    //         if(TX_OUT_tb === TX_OUT_expec && Busy_tb === Busy_expec) begin
-    //             $display("Test Case has succeeded");
-    //             correct = correct + 1;
-    //         end else begin
-    //             $display("Test Case has failed at %0t", $time);
-    //             error = error + 1;
-    //         end
-    //         Busy_expec = Busy_expec_temp; // Update Busy_expec for next cycle
-    //     end
-    // endtask
+    task check_out;
+        input error_flag;
+        begin
+            #(7*CLOCK_PERIOD);
+            if (!error_flag) begin
+                if (Data_Valid_tb) begin
+                    if (P_DATA_tb === data_temp) begin
+                        $display("Input Data: %b. Data Valid at time %0t with P_DATA = %b", data_temp, $time, P_DATA_tb);
+                        correct = correct + 1;
+                    end
+                    else begin
+                        $display("ERROR: Mismatch! Input Data: %b. Received P_DATA = %b at time %0t", data_temp, P_DATA_tb, $time);
+                        error = error + 1;
+                    end
+                end
+                else 
+                    $display("Input Data: %b. Start, Stop or Parity Error at: %0t", data_temp, $time);
+            end
+            else begin
+                if (Data_Valid_tb) begin
+                    $display("ERROR: Data Valid asserted incorrectly at time %0t with P_DATA = %b", $time, P_DATA_tb);
+                    error = error + 1;
+                end
+                else begin
+                    $display("Correctly detected Start, Stop or Parity Error at time %0t", $time);
+                    correct = correct + 1;
+                end
+            end
+        end
+    endtask
 
 endmodule

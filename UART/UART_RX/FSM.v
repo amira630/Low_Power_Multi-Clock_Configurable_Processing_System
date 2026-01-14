@@ -27,13 +27,20 @@ module FSM(
 
     reg [2:0] current_state, next_state;
     reg [3:0] bit_count;
+    reg parity_error_flag;
 
     // State Transition
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
+        if (!rst_n) begin
             current_state <= IDLE;
-        else
+            parity_error_flag <= 1'b0;
+        end else begin
             current_state <= next_state;
+            if ((current_state == PARITY_BIT) & (edge_cnt == ((Prescale>>1)+2)))
+                parity_error_flag <= par_err;
+            else if (current_state == IDLE)
+                parity_error_flag <= 1'b0;
+        end
     end
 
     // Next State Logic
@@ -56,14 +63,13 @@ module FSM(
                     enable      = 1'b0;
                     next_state = IDLE;
                 end
-                bit_count   = 1'b0;
+                bit_count = 1'b0;
             end
             START_BIT: begin
-                if (edge_cnt == ((Prescale>>1)+1)) begin
+                if (edge_cnt == ((Prescale>>1)+1))
                     strt_chk_en = 1'b1;
-                end else if (bit_cnt == 4'd1) begin
+                else if (bit_cnt == 4'd1) 
                     next_state = DATA_BITS;
-                end
                 else
                     next_state = START_BIT;
                 bit_count   = 1'b0;
@@ -78,25 +84,25 @@ module FSM(
                         next_state = PARITY_BIT;
                     else
                         next_state = STOP_BIT;
-                end
-                else
+                end else
                     next_state = DATA_BITS;
             end
             PARITY_BIT:begin
-                if (edge_cnt == ((Prescale>>1)+1)) begin
+                if (edge_cnt == ((Prescale>>1)+1))
                     par_chk_en = 1'b1;
-                end else if (bit_cnt == 4'd10) 
+                else if (bit_cnt == 4'd10) 
                     next_state = STOP_BIT;
                 else
                     next_state = PARITY_BIT;
                 bit_count   = 1'b0;
             end
             STOP_BIT: begin
-                if (edge_cnt == ((Prescale>>1)+1)) begin
+                if (edge_cnt == ((Prescale>>1)+1))
                     stp_chk_en = 1'b1;
-                end else if (edge_cnt > ((Prescale>>1)+1)) begin
+                else if (edge_cnt > ((Prescale>>1)+1)) begin
                     next_state = IDLE;
-                    Data_Valid = 1'b1;
+                    if (!parity_error_flag)
+                        Data_Valid = 1'b1;
                 end else
                     next_state = STOP_BIT;
                 bit_count   = 1'b0;
@@ -104,7 +110,8 @@ module FSM(
             default: begin next_state = IDLE; bit_count = 1'b0; end
         endcase
         if (strt_glitch | stp_err | par_err) begin
-            next_state  = IDLE;
+            if (strt_glitch | stp_err)
+                next_state  = IDLE;
             dat_samp_en = 1'b0;
             enable      = 1'b0;
             Data_Valid  = 1'b0;
