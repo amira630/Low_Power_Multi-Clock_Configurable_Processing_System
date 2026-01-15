@@ -90,7 +90,7 @@ module FSM(
             PARITY_BIT:begin
                 if (edge_cnt == ((Prescale>>1)+1))
                     par_chk_en = 1'b1;
-                else if (bit_cnt == 4'd10) 
+                else if (edge_cnt == 4'd0) 
                     next_state = STOP_BIT;
                 else
                     next_state = PARITY_BIT;
@@ -99,10 +99,9 @@ module FSM(
             STOP_BIT: begin
                 if (edge_cnt == ((Prescale>>1)+1))
                     stp_chk_en = 1'b1;
-                else if (edge_cnt > ((Prescale>>1)+1)) begin
+                else if (!parity_error_flag && (edge_cnt == (Prescale-2))) begin
                     next_state = IDLE;
-                    if (!parity_error_flag)
-                        Data_Valid = 1'b1;
+                    Data_Valid = 1'b1;
                 end else
                     next_state = STOP_BIT;
                 bit_count   = 1'b0;

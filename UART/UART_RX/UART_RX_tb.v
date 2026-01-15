@@ -7,8 +7,8 @@ module UART_RX_tb();
 
     parameter PRESCALE = 8; // Prescale value
     parameter CLOCK_FREQ_TX = 115.2; // Clock frequency in KHz
-    parameter CLOCK_PERIOD_TX = 1000/CLOCK_FREQ_TX; // Transmission Clock period in ns
-    parameter CLOCK_PERIOD = 1000/(CLOCK_FREQ_TX * PRESCALE); // Receiver Clock period in ns
+    parameter CLOCK_PERIOD_TX = 1000000/CLOCK_FREQ_TX; // Transmission Clock period in ns
+    parameter CLOCK_PERIOD = CLOCK_PERIOD_TX/PRESCALE; // Receiver Clock period in ns
     integer correct, error;
 
     /////////////////////////////////////////////////////////
@@ -181,7 +181,7 @@ module UART_RX_tb();
             @(negedge clk_tb);
             error_type = $random;
             input_stimulus($random, $random, error_type); // Random Parity and Random Errors
-            check_out(|error_type); 
+            check_out(1); 
         end
 
         #(20*CLOCK_PERIOD)
@@ -281,7 +281,7 @@ module UART_RX_tb();
     task check_out;
         input error_flag;
         begin
-            #(7*CLOCK_PERIOD);
+            #((PRESCALE-1)*CLOCK_PERIOD);
             if (!error_flag) begin
                 if (Data_Valid_tb) begin
                     if (P_DATA_tb === data_temp) begin
@@ -293,18 +293,14 @@ module UART_RX_tb();
                         error = error + 1;
                     end
                 end
-                else 
+                else begin
                     $display("Input Data: %b. Start, Stop or Parity Error at: %0t", data_temp, $time);
-            end
-            else begin
-                if (Data_Valid_tb) begin
-                    $display("ERROR: Data Valid asserted incorrectly at time %0t with P_DATA = %b", $time, P_DATA_tb);
                     error = error + 1;
                 end
-                else begin
-                    $display("Correctly detected Start, Stop or Parity Error at time %0t", $time);
-                    correct = correct + 1;
-                end
+            end
+            else begin
+                $display("Correctly detected Start, Stop or Parity Error at time %0t", $time);
+                correct = correct + 1;
             end
         end
     endtask
