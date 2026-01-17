@@ -12,7 +12,7 @@ module UART_TX(
     wire [1:0] mux_sel;
     wire       ser_en, ser_done, capture, s_data, parity;
 
-    FSM FSM_U0 (
+    FSM_TX FSM_U0 (
         .clk(clk),
         .rst_n(rst_n),
         .Data_Valid(Data_Valid),

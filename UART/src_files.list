@@ -1,0 +1,15 @@
+UART_RX/FSM.v 
+UART_RX/Edge_Bit_Counter.v 
+UART_RX/Data_Sampling.v
+UART_RX/Deserializer.v 
+UART_RX/Parity_Check.v 
+UART_RX/Start_Check.v 
+UART_RX/Stop_Check.v 
+UART_RX/UART_RX.v 
+UART_TX/FSM.v 
+UART_TX/Serializer.v 
+UART_TX/Parity_Calc.v 
+UART_TX/MUX4x1.v 
+UART_TX/UART_TX.v
+UART.v
+UART_tb.v

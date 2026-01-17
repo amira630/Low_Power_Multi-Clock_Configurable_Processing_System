@@ -1,4 +1,4 @@
-module FSM(
+module FSM_RX(
     input wire       clk,
     input wire       rst_n,
     input wire       RX_IN,

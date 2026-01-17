@@ -23,7 +23,7 @@ module UART_RX(
     wire [3:0] bit_cnt;
 
 
-    FSM FSM_U0 (
+    FSM_RX FSM_U1 (
         .clk         (clk),
         .rst_n       (rst_n),
         .RX_IN       (RX_IN),

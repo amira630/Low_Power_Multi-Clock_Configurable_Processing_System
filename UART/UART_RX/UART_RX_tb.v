@@ -109,11 +109,11 @@ module UART_RX_tb();
                 correct = correct + 1;
             end
         end
-        $display("Start of Odd Parity Testing with issues at %0t", $time);
+        $display("Start of Odd Parity Testing at %0t", $time);
         
         repeat(25) begin
             @(negedge clk_tb);
-            input_stimulus(1'b1, 1'b1, 3'b10); // Parity enabled, Odd Parity, Stop error
+            input_stimulus(1'b1, 1'b1, 3'b0); // Parity enabled, Odd Parity, Stop error
             check_out(1); 
         end
 
