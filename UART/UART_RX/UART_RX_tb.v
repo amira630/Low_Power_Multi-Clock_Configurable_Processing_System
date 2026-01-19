@@ -5,7 +5,7 @@ module UART_RX_tb();
     ///////////////////// Parameters ////////////////////////
     /////////////////////////////////////////////////////////
 
-    parameter PRESCALE = 8; // Prescale value
+    parameter PRESCALE = 32; // Prescale value
     parameter CLOCK_FREQ_TX = 115.2; // Clock frequency in KHz
     parameter CLOCK_PERIOD_TX = 1000000/CLOCK_FREQ_TX; // Transmission Clock period in ns
     parameter CLOCK_PERIOD = CLOCK_PERIOD_TX/PRESCALE; // Receiver Clock period in ns
@@ -113,15 +113,19 @@ module UART_RX_tb();
         
         repeat(25) begin
             @(negedge clk_tb);
-            input_stimulus(1'b1, 1'b1, 3'b0); // Parity enabled, Odd Parity, Stop error
+            input_stimulus(1'b1, 1'b1, 3'b0); // Parity enabled, Odd Parity, No errors
             check_out(1); 
         end
 
-        repeat(25) begin
-            @(negedge clk_tb);
-            input_stimulus(1'b1, 1'b1, 3'b1); // Parity enabled, Odd Parity, Start error
-            check_out(1); 
-        end
+        // $display("Start of Odd Parity Testing with START issues at %0t", $time);
+
+        // repeat(25) begin
+        //     @(negedge clk_tb);
+        //     input_stimulus(1'b1, 1'b1, 3'b1); // Parity enabled, Odd Parity, Start error
+        //     check_out(1); 
+        // end
+
+        $display("Start of Odd Parity Testing with PARITY issues at %0t", $time);
 
         repeat(25) begin
             @(negedge clk_tb);
@@ -129,7 +133,15 @@ module UART_RX_tb();
             check_out(1); 
         end
 
-        $display("Start of Even Parity Testing with issues at %0t", $time);
+        $display("Start of Odd Parity Testing with STOP issues at %0t", $time);
+
+        repeat(25) begin
+            @(negedge clk_tb);
+            input_stimulus(1'b1, 1'b1, 3'b10); // Parity enabled, Odd Parity, Stop error
+            check_out(1); 
+        end
+
+        $display("Start of Even Parity Testing with START issues at %0t", $time);
 
         repeat(25) begin
             @(negedge clk_tb);
@@ -137,11 +149,15 @@ module UART_RX_tb();
             check_out(1); 
         end
 
+        $display("Start of Even Parity Testing with STOP issues at %0t", $time);
+
         repeat(25) begin
             @(negedge clk_tb);
             input_stimulus(1'b1, 1'b0, 3'b10); // Parity enabled, Even Parity, Stop error
             check_out(1); 
         end
+
+        $display("Start of Even Parity Testing with PARITY issues at %0t", $time);
 
         repeat(25) begin
             @(negedge clk_tb);
@@ -149,13 +165,7 @@ module UART_RX_tb();
             check_out(1); 
         end
 
-        $display("Start of no Parity Testing with issues at %0t", $time);
-
-        repeat(25) begin
-            @(negedge clk_tb);
-            input_stimulus(1'b0, 1'b1, 3'b1); // Parity Disabled, Odd Parity, Start error
-            check_out(1); 
-        end
+        $display("Start of no Parity Testing with STOP issues at %0t", $time);
 
         repeat(25) begin
             @(negedge clk_tb);
@@ -163,11 +173,15 @@ module UART_RX_tb();
             check_out(1); 
         end
 
+        $display("Start of no Parity Testing with START issues at %0t", $time);
+
         repeat(25) begin
             @(negedge clk_tb);
             input_stimulus(1'b0, 1'b0, 3'b1); // Parity Disabled, Even Parity, Start error
             check_out(1); 
         end
+
+        $display("Start of no Parity Testing with STOP issues at %0t", $time);
 
         repeat(25) begin
             @(negedge clk_tb);

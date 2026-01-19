@@ -27,19 +27,25 @@ module FSM_RX(
 
     reg [2:0] current_state, next_state;
     reg [3:0] bit_count;
-    reg parity_error_flag;
+    reg parity_error_flag, stop_error_flag;
 
     // State Transition
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             current_state <= IDLE;
             parity_error_flag <= 1'b0;
+            stop_error_flag   <= 1'b0;
         end else begin
             current_state <= next_state;
-            if ((current_state == PARITY_BIT) & (edge_cnt == ((Prescale>>1)+2)))
-                parity_error_flag <= par_err;
-            else if (current_state == IDLE)
+            if (edge_cnt == ((Prescale>>1)+2)) begin
+                if (current_state == STOP_BIT)
+                    stop_error_flag <= stp_err;
+                if (current_state == PARITY_BIT)
+                    parity_error_flag <= par_err;
+            end else if (current_state == IDLE) begin
                 parity_error_flag <= 1'b0;
+                stop_error_flag   <= 1'b0;
+            end
         end
     end
 
@@ -99,18 +105,18 @@ module FSM_RX(
             STOP_BIT: begin
                 if (edge_cnt == ((Prescale>>1)+1))
                     stp_chk_en = 1'b1;
-                else if (!parity_error_flag && (edge_cnt == (Prescale-2))) begin
+                else if (edge_cnt == (Prescale-2)) begin
                     next_state = IDLE;
-                    Data_Valid = 1'b1;
+                    if (!parity_error_flag && !stop_error_flag)
+                        Data_Valid = 1'b1;
                 end else
                     next_state = STOP_BIT;
                 bit_count   = 1'b0;
             end
             default: begin next_state = IDLE; bit_count = 1'b0; end
         endcase
-        if (strt_glitch | stp_err | par_err) begin
-            if (strt_glitch | stp_err)
-                next_state  = IDLE;
+        if (strt_glitch) begin
+            next_state  = IDLE;
             dat_samp_en = 1'b0;
             enable      = 1'b0;
             Data_Valid  = 1'b0;
