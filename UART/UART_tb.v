@@ -63,7 +63,7 @@ module UART_tb();
 
     initial begin
         // System Functions
-        $dumpfile("UART_TX.vcd");
+        $dumpfile("UART.vcd");
         $dumpvars;
 
         // initialization

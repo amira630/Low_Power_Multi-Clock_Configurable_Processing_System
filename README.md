@@ -2,161 +2,75 @@
 
 ## Overview
 
-This is a comprehensive digital design project implementing a low-power, multi-clock domain configurable processing system in Verilog. The architecture is optimized for embedded and IoT applications with flexible configuration options and sophisticated clock domain crossing techniques.
+This is a comprehensive digital design project implementing a low-power, multi-clock domain configurable processing system in Verilog. The architecture targets embedded and IoT applications with flexible configuration options and explicit support for multi-clock domain crossing.
 
-**Current Status**: ✅ **Phase 1 Complete** - UART (RX/TX) modules complete and verified. Ready for Phase 2 development.
+**Current Status (summary)**: multiple modules and testbenches are present in the repository. UART RX/TX are implemented and have testbenches and simulation scripts. Several other modules are implemented (ALU, register file, clocking and synchronization primitives), but need unit tests and system integration verification.
 
-## Project Structure
+## Project snapshot (what's present)
 
-```
-UART/                 # Communication Interface (COMPLETED)
-├── UART_RX/          # UART Receiver Module
-│   ├── UART_RX.v     # Main receiver module (98 lines)
-│   ├── FSM.v         # Receiver finite state machine
-│   ├── Data_Sampling.v
-│   ├── Deserializer.v
-│   ├── Edge_Bit_Counter.v
-│   ├── Parity_Check.v
-│   ├── Start_Check.v
-│   └── Stop_Check.v
-└── UART_TX/          # UART Transmitter Module
-    ├── UART_TX.v     # Main transmitter module (52 lines)
-    ├── UART_TX_tb.v  # Testbench
-    ├── FSM.v         # Transmitter finite state machine
-    ├── Serializer.v
-    ├── Parity_Calc.v
-    ├── MUX4x1.v
-    ├── RUN.do        # ModelSim simulation script
-    └── UART_TX.vcd   # Waveform output
-```
+- UART/
+  - UART_RX/ `UART_RX.v` — receiver sources, `UART_RX_tb.v`, `RUN.do`, `UART_RX.vcd`
+  - UART_TX/ `UART_TX.v` — transmitter sources, `UART_TX_tb.v`, `RUN.do`, `UART_TX.vcd`
+  - `UART.v` — Top Module, `UART_tb.v`, `RUN.do`, `UART.vcd`
+- ALU/`ALU.v`
+- Reg_File/`Reg_File.v`
+- SYS_CTRL/`SYS_CTRL.v`
+- Clock_Divider/
+  - `CLK_DIV.v`, `PRESCALE_MUX.v`
+- Clock_Gating/`CLK_GATE.v`
+- Data Synchronizers/
+  - `DATA_SYNC.v`, `RST_SYNC.v`
+  - `ASYNC_FIFO/` (`ASYNC_FIFO.v`, `FIFO_WR.v`, `FIFO_RD.v`, `Dual_Port_RAM.v`, `BIT_SYNC.v`)
+- Pulse_Generator/`PULSE_GEN.v`
 
-## Planned Architecture
+## Verified / Tested
 
-The complete system will include the following subsystems:
+- UART RX and UART TX: testbenches (`UART_RX_tb.v`, `UART_TX_tb.v`), ModelSim `RUN.do` scripts and generated VCD waveforms are present and ready to run.
+- UART Top (TX + RX): testbenches (`UART_tb.v`), ModelSim `RUN.do` scripts and generated VCD waveforms are present and ready to run.
 
-### In Development (Completed)
-- ✅ **UART Interface**: Serial communication receiver and transmitter (UART RX and TX complete and verified)
+## Recommended Simulation & Testflow
 
-### Planned Modules
-- ⏳ **System Controller**: Main control unit managing system operation
-- ⏳ **Register File**: Configuration and status register storage
-- ⏳ **ALU**: Arithmetic and logic operations
-- ⏳ **Asynchronous FIFO**: Cross-domain data buffering
-- ⏳ **Data Synchronizer**: Multi-clock domain synchronization
-- ⏳ **Reset Synchronizers**: Safe reset distribution across domains
-- ⏳ **Clock Gating**: Dynamic power reduction
-- ⏳ **Clock Dividers**: Configurable clock generation
+1. Use ModelSim (provided `RUN.do`) or an open-source flow (Icarus Verilog + GTKWave) for unit tests.
+2. Standardize each module with a `<module>_tb.v` and a `RUN.do` that:
+   - compiles sources, runs the testbench, and writes a VCD
+   - contains simple pass/fail checks (asserts) where feasible
+3. Add a top-level smoke test that instantiates UART + control signals to exercise basic data flow across clock domains.
 
-## UART Module Features
-
-### UART Receiver (RX)
-- Configurable prescale ratio for baud rate selection
-- Programmable parity control (even/odd)
-- Data sampling with glitch detection
-- Frame error detection (start/stop bits)
-- Parity error detection
-- Modular design with separate components:
-  - FSM: Protocol state machine
-  - Data Sampling: Clock synchronization
-  - Deserializer: Serial-to-parallel conversion
-  - Parity Check: Data integrity validation
-  - Start/Stop Check: Frame validation
-
-### UART Transmitter (TX)
-- Configurable prescale ratio
-- Programmable parity generation
-- Data serialization with multiplexing
-- Busy signal for flow control
-- Modular architecture:
-  - FSM: Control state machine
-  - Serializer: Parallel-to-serial conversion
-  - Parity Calculator: Parity bit generation
-  - Multiplexer: Output data selection
-
-## Module Interfaces
-
-### UART_RX
-**Inputs:**
-- `clk`: System clock
-- `rst_n`: Active-low reset
-- `RX_IN`: Serial input data
-- `Prescale[5:0]`: Baud rate prescaler value
-- `Par_En`: Parity enable
-- `Par_Typ`: Parity type (0=Even, 1=Odd)
-
-**Outputs:**
-- `P_DATA[7:0]`: Parallel data output
-- `Data_Valid`: Data ready flag
-- `PAR_Err`: Parity error flag
-- `STP_Err`: Stop bit error flag
-
-### UART_TX
-**Inputs:**
-- `clk`: System clock
-- `rst_n`: Active-low reset
-- `P_DATA[7:0]`: Parallel data input
-- `Data_Valid`: Data input valid flag
-- `Par_En`: Parity enable
-- `Par_Typ`: Parity type (0=Even, 1=Odd)
-
-**Outputs:**
-- `TX_OUT`: Serial output data
-- `Busy`: Transmitter busy flag
-
-## Simulation & Testing
-
-- **Testbench**: [UART_TX_tb.v](UART/UART_TX/UART_TX_tb.v)
-- **Simulation Script**: [RUN.do](UART/UART_TX/RUN.do) (ModelSim format)
-- **Waveforms**: [UART_TX.vcd](UART/UART_TX/UART_TX.vcd)
-
-To run simulations in ModelSim:
+To run a provided ModelSim script (example):
 ```tcl
 do RUN.do
 ```
 
-## Development Status
+## Development Status (accurate)
 
-✅ **Phase 1 Complete**
+Implemented (sources present)
+- UART: RX and TX with testbenches and simulation scripts
+- ALU: `ALU/ALU.v`
+- Register File: `Reg_File/Reg_File.v`
+- System Controller: `SYS_CTRL/SYS_CTRL.v`
+- Clock Divider: `Clock_Divider/CLK_DIV.v`
+- Clock Gating: `Clock_Gating/CLK_GATE.v`
+- Data Synchronizers: `Data Synchronizers/DATA_SYNC.v`, `Data Synchronizers/RST_SYNC.v`
+- Asynchronous FIFO and submodules: `Data Synchronizers/ASYNC_FIFO/`
+- Pulse Generator: `Pulse_Generator/PULSE_GEN.v`
 
-**Phase 1 (Completed)**: UART communication subsystem
-- ✅ Core UART RX and TX modules implemented
-- ✅ UART RX fully verified and tested
-- ✅ UART TX fully verified and tested
-- ✅ Testbench and simulation setup complete
-- ✅ Integration verified and ready for system integration
+Verified / Tested
+- UART RX and UART TX: unit testbenches, `RUN.do` scripts, and VCDs present.
 
-**Phase 2 (Next)**: Control and processing unit
-- System controller development
-- Register file implementation
-- ALU design
+Remaining work
+- Unit-testing: add focused testbenches for `ALU`, `Reg_File`, `SYS_CTRL`, `CLK_DIV`, `CLK_GATE`, `DATA_SYNC`, `RST_SYNC`, `ASYNC_FIFO` and FIFO submodules.
+- Standardize `RUN.do`/test naming and add pass/fail checks instead of only VCD output.
+- Create top-level integration tests that exercise multiple clock domains and the system controller.
+- Add simple regression automation (batch script or CI) to run unit tests and collect results.
+- Perform performance/power characterization and then synthesis and place-and-route.
 
-**Phase 3 (Planned)**: Power and clock management
-- Clock dividers and gating logic
-- Low-power optimization
-- Multi-clock domain crossing
+## Next Steps (short checklist)
 
-## Key Design Considerations
-
-1. **Modularity**: Separated concerns allow for independent testing and reuse
-2. **Configurability**: Runtime parameters for prescale and parity options
-3. **Error Detection**: Comprehensive error flags for protocol violations
-4. **Multi-Clock Support**: Designed to handle prescaler-based clock domain crossing
-5. **Low Power**: Scalable design suitable for embedded and IoT applications
-
-## Next Steps
-
-- [x] ✅ Complete UART verification and testing
-- [ ] Implement System Controller
-- [ ] Develop Register File
-- [ ] Design ALU
-- [ ] Integrate Asynchronous FIFO
-- [ ] Add Data Synchronizer for multi-clock domains
-- [ ] Implement Reset Synchronizers
-- [ ] Add Clock Gating logic
-- [ ] Integrate Clock Dividers
-- [ ] System-level integration and verification
-- [ ] Performance and power optimization
-- [ ] Synthesis and layout
+- [x] UART RX/TX: sources + testbenches present
+- [ ] Unit tests for other cores (`ALU`, `Reg_File`, `SYS_CTRL`, `Clock` and `Sync` blocks)
+- [ ] Top-level block/system integration testing
+- [ ] Regression automation / CI
+- [ ] Performance/power tuning and synthesis
 
 ## Notes
 
